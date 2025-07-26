@@ -1,0 +1,444 @@
+[
+  {
+    "name": "Klingon",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Regular Fleet",
+        "maxShips": 10,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "Marauders",
+        "maxShips": 4,
+        "minShips": 3,
+        "ability": "Take 1 Production for each Rival Ship destroyed by this fleet.",
+        "effects": null
+      },
+      {
+        "id": "2",
+        "name": "Battle Group",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "This fleet may re-roll To Hit rolls of 1 in Space Battles.",
+        "effects": {
+          "rerollOnes": true
+        }
+      },
+      {
+        "id": "3",
+        "name": "Assault",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "This fleet may re-roll To Hit rolls of 1 in Planetary Invasions.",
+        "effects": null
+      }
+    ],
+    "advancements": [
+      {
+        "name": "Disruptor Technology",
+        "ability": "Your Rolls To Hit of 6 always Score a Hit, regardless of the Rival's Shield Modifier.",
+        "isStartingAdvancement": true,
+        "effects": {
+          "ignoreShieldsOn6": true
+        }
+      },
+      {
+        "name": "Mass Fire Tactics",
+        "ability": "In Space Battles, failed To Hit Rolls of doubles destroy 1 enemy Ship.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "doublesKillOnMiss": true
+        }
+      },
+      {
+        "name": "Adapted Cloaking Device",
+        "ability": "Your Ships have First Strike in Space Battles during your turn.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "firstStrike": true
+        }
+      }
+    ],
+    "specialAbilities": []
+  },
+  {
+    "name": "Breen",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Regular Fleet",
+        "maxShips": 10,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "System Patrol",
+        "maxShips": 5,
+        "minShips": 3,
+        "ability": "Each Ship in the Fleet rolls two dice when Rolling To Hit in a Space Battle in Breen Territory. ",
+        "effects": {
+          "doubleDiceInTerritory": true
+        }
+      },
+      {
+        "id": "2",
+        "name": "Science Fleet",
+        "maxShips": 4,
+        "minShips": 3,
+        "ability": "When this Fleet Braves a Hazard, only roll for one of its ships. This Fleet may Brave the Hazard of a Phenomenon they Occupy without Exhausting a Command.",
+        "effects": null
+      },
+      {
+        "id": "3",
+        "name": "Deep Strike Fleet",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "This Fleet may Invade a Planet from and Adjacent Sector. If it does so, it cannot take Control of the System, and must Retreat after the first Combat Round.",
+        "effects": null
+      }
+    ],
+    "advancements": [
+      {
+        "name": "Breen Cloaking Device",
+        "ability": "Your Ships have First Strike in Space Battles during your turn.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "firstStrike": true
+        }
+      },
+      {
+        "name": "Energy Damping Weapons",
+        "ability": "Your Rolls To Hit of 5 or 6 always Score a Hit, regardless of the Rival's Shield Modifier.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "ignoreShieldsOn5Or6": true
+        }
+      }
+    ],
+    "specialAbilities": [
+      {
+        "name": "Territorial",
+        "ability": "Battle is in Breen Territory (Breen ships reroll all failed hits)",
+        "type": "territorial",
+        "effects": {
+          "rerollFailedHits": true
+        }
+      }
+    ]
+  },
+  {
+    "name": "Ferengi",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Loss Interdiction Task Force",
+        "maxShips": 7,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "Commerce Enforcement Squadron",
+        "maxShips": 3,
+        "minShips": 3,
+        "ability": "This Fleet may end its movement in a System containing rival Ships, regardless of Trade status. It may not move past Hostile rival ships. This Fleet may Enter Warp on your turn without Exhausting a Command.",
+        "effects": null
+      },
+      {
+        "id": "2",
+        "name": "Market Penetration Convoy",
+        "maxShips": 3,
+        "minShips": 3,
+        "ability": "This Fleet may connect new Space Lanes to Systems beyond the maximum number of Space Lanes the System allows.",
+        "effects": null
+      },
+      {
+        "id": "3",
+        "name": "Franchise Establishment Flotilla",
+        "maxShips": 5,
+        "minShips": 3,
+        "ability": "While moving, you may remove Ships from this Fleet and place them in any Systems the Fleet moves through. If this Fleet drops below 3 Ships while moving, it disbands after moving.",
+        "effects": null
+      }
+    ],
+    "advancements": [],
+    "specialAbilities": []
+  },
+  {
+    "name": "Romulan",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Regular Fleet",
+        "maxShips": 9,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "Science Fleet",
+        "maxShips": 4,
+        "minShips": 3,
+        "ability": "When this Fleet Braves a Hazard, only roll for one of its ships. This Fleet may Brave the Hazard of a Phenomenon they Occupy without Exhausting a Command.",
+        "effects": null
+      },
+      {
+        "id": "2",
+        "name": "Mining Fleet",
+        "maxShips": 4,
+        "minShips": 3,
+        "ability": "When this Fleet Occupies an Undeveloped System or phenomenon you may use one Command to take 2 production. This may only be used once per turn.",
+        "effects": null
+      },
+      {
+        "id": "3",
+        "name": "Battle Group",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "This fleet may re-roll To Hit rolls of 1 in Space Battles.",
+        "effects": {
+          "rerollOnes": true
+        }
+      }
+    ],
+    "advancements": [
+      {
+        "name": "Romulan Cloaking Device",
+        "ability": "Your Ships have First Strike in Space Battles during your turn.",
+        "isStartingAdvancement": true,
+        "effects": {
+          "firstStrike": true
+        }
+      },
+      {
+        "name": "Superior Shield Harmonics",
+        "ability": "Your Fleets may ignore the first Casualty in each round of space battles.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "ignoreFirstCasualty": true
+        }
+      },
+      {
+        "name": "Superior Targeting Array",
+        "ability": "Your ships and nodes may reroll 1 To Hit roll in each round of combat.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "rerollOneMiss": true
+        }
+      },
+      {
+        "name": "Romulan Disrupters",
+        "ability": "Your Rolls To Hit of 6 always Score a Hit, regardless of the Rival's Shield Modifier.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "ignoreShieldsOn6": true
+        }
+      }
+    ],
+    "specialAbilities": []
+  },
+  {
+    "name": "Cardassian",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Regular Fleet",
+        "maxShips": 9,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "Hunter Killer",
+        "maxShips": 3,
+        "minShips": 3,
+        "ability": "In the first round of Space Battles, all this Fleet's To Hit rolls automatically score hits.",
+        "effects": {
+          "autoHitFirstRound": true
+        }
+      },
+      {
+        "id": "2",
+        "name": "Overseer",
+        "maxShips": 3,
+        "minShips": 3,
+        "ability": "If this Fleet occupies a Cardassian controlled system during resource generation, double the production generated by that system. May not be used in orbit of Cardassia Prime.",
+        "effects": null
+      },
+      {
+        "id": "3",
+        "name": "Assault Fleet",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "This Fleet may re-roll To Hit rolls of 1 in Planetary Invasions.",
+        "effects": null
+      }
+    ],
+    "advancements": [
+      {
+        "name": "Weaponized Starbases",
+        "ability": "Your Starbases now add 3 additional dice To Hit.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "weaponizedStarbases": true
+        }
+      }
+    ],
+    "specialAbilities": []
+  },
+  {
+    "name": "Federation",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Battle Group",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "This fleet may re-roll To Hit rolls of 1 in Space Battles.",
+        "effects": {
+          "rerollOnes": true
+        }
+      },
+      {
+        "id": "1",
+        "name": "Science Fleet",
+        "maxShips": 4,
+        "minShips": 3,
+        "ability": "When this Fleet Braves a Hazard, only roll for one of its ships. This Fleet may Brave the Hazard of a Phenomenon they Occupy without Exhausting a Command.",
+        "effects": null
+      },
+      {
+        "id": "2",
+        "name": "Colonization Fleet",
+        "maxShips": 3,
+        "minShips": 3,
+        "ability": "On your turn, you may discard a Ship from this Fleet and Disband this Fleet to immediately colonize an undeveloped system without spending a Culture",
+        "effects": null
+      },
+      {
+        "id": "3",
+        "name": "Diplomatic Fleet",
+        "maxShips": 3,
+        "minShips": 3,
+        "ability": "You may re-roll your Hegemony Roll in Systems this Fleet occupies.",
+        "effects": null
+      }
+    ],
+    "advancements": [
+      {
+        "name": "Tachyon Detection Array",
+        "ability": "Romulan Cloaking Technologies effects may not be used in Sectors containing your Ships or in space battles against your ships.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "blocksCloaking": true
+        }
+      }
+    ],
+    "specialAbilities": []
+  },
+  {
+    "name": "Dominion",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Regular Fleet",
+        "maxShips": 9,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "Domination Fleet",
+        "maxShips": 7,
+        "minShips": 3,
+        "ability": "If this Fleet has 6 or fewer Ships in your Recharge Stage, you may spend 1 Command Token to Build 1 Ship in it.",
+        "effects": null
+      },
+      {
+        "id": "2",
+        "name": "Battleship Fleet",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "Exhaust an extra Command Token to Move this Fleet. Increase the Shield modifier of this fleet by 1. Fleet has a tactical maneuver or retreat move of 1 sector after space battle or planetary invasion.",
+        "effects": null
+      },
+      {
+        "id": "3",
+        "name": "Strike Fleet",
+        "maxShips": 5,
+        "minShips": 3,
+        "ability": "Before either player rolls to hit in the first combat round of a space battle you may spend a command token to have all this fleet's hit rolls automatically score a hit.",
+        "effects": null
+      }
+    ],
+    "advancements": [
+      {
+        "name": "Phased Polaron Beams",
+        "ability": "Your Rolls To Hit of 6 always Score a Hit, regardless of the Rival's Shield Modifier.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "ignoreShieldsOn6": true
+        }
+      }
+    ],
+    "specialAbilities": []
+  },
+  {
+    "name": "Vulcan",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Regular Fleet",
+        "maxShips": 9,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "Consul Halitra",
+        "maxShips": 5,
+        "minShips": 3,
+        "ability": "When in Orbit of an independent civilization or rival system whose trade agreement you hold, this fleet may place or remove a Vulcan ambassador. This does not use a command and may not be done while moving.",
+        "effects": null
+      },
+      {
+        "id": "2",
+        "name": "Science Halitra",
+        "maxShips": 6,
+        "minShips": 3,
+        "ability": "This Fleet may re-roll any failed hazardous system tests or brave the hazard of a phenomenon it occupies without exhausting a command.",
+        "effects": null
+      },
+      {
+        "id": "3",
+        "name": "Observation Halitra",
+        "maxShips": 4,
+        "minShips": 3,
+        "ability": "When entering a new system at impulse speed this fleet may discard the first drawn exploration card and draw a new one. When this fleet retreats from a space battle it may enter warp instead of its normal impulse speed retreat move.",
+        "effects": null
+      }
+    ],
+    "advancements": [
+      {
+        "name": "Stone of Gol",
+        "ability": "In Space Battles, you may reroll any dice equal to or higher than your current Ascendancy.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "stoneOfGol": true
+        }
+      }
+    ],
+    "specialAbilities": []
+  }
+]

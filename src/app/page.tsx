@@ -3,19 +3,22 @@
 import { useState, useEffect } from 'react';
 
 interface Advancement {
-  faction: string;
   name: string;
   ability: string;
   isStartingAdvancement: boolean;
   effects: {
     ignoreShieldsOn6?: boolean;
+    ignoreShieldsOn5Or6?: boolean;
     doublesKillOnMiss?: boolean;
     firstStrike?: boolean;
+    ignoreFirstCasualty?: boolean;
+    rerollOneMiss?: boolean;
+    blocksCloaking?: boolean;
+    stoneOfGol?: boolean;
   };
 }
 
 interface Fleet {
-  faction: string;
   id: string;
   name: string;
   maxShips: number;
@@ -24,7 +27,25 @@ interface Fleet {
   effects: {
     productionOnKill?: number;
     rerollOnes?: boolean;
+    doubleDiceInTerritory?: boolean;
+    autoHitFirstRound?: boolean;
+  } | null;
+}
+
+interface SpecialAbility {
+  name: string;
+  ability: string;
+  type: string;
+  effects: {
+    rerollFailedHits?: boolean;
   };
+}
+
+interface Faction {
+  name: string;
+  fleets: Fleet[];
+  advancements: Advancement[];
+  specialAbilities?: SpecialAbility[];
 }
 
 interface FleetAllocation {
@@ -40,6 +61,8 @@ interface PlayerSetup {
   fleets: FleetAllocation[];
   individualShips: number;
   hasStarbase: boolean;
+  inBreenTerritory: boolean;
+  ascendancy: number;
 }
 
 interface BattleResult {
@@ -48,24 +71,63 @@ interface BattleResult {
   totalBattles: number;
 }
 
+// Battle state for tracking fleets and individual ships during combat
+interface BattleState {
+  fleets: Array<{ fleet: Fleet; shipCount: number; isActive: boolean }>;
+  individualShips: number;
+  advancements: Advancement[];
+  hasStarbase: boolean;
+  weapons: number;
+  shields: number;
+  inBreenTerritory: boolean;
+  ascendancy: number;
+}
+
 // Simulate a single space battle based on Star Trek Ascendancy rules
 function simulateBattle(attacker: PlayerSetup, defender: PlayerSetup): 'attacker' | 'defender' {
-  let attackerShips = attacker.fleets.reduce((total, fleet) => total + fleet.shipCount, 0) + attacker.individualShips;
-  let defenderShips = defender.fleets.reduce((total, fleet) => total + fleet.shipCount, 0) + defender.individualShips;
+  // Create mutable battle states
+  const attackerState: BattleState = {
+    fleets: attacker.fleets.map(f => ({ ...f, isActive: true })),
+    individualShips: attacker.individualShips,
+    advancements: attacker.advancements,
+    hasStarbase: attacker.hasStarbase,
+    weapons: attacker.weapons,
+    shields: attacker.shields,
+    inBreenTerritory: attacker.inBreenTerritory,
+    ascendancy: attacker.ascendancy
+  };
+  
+  const defenderState: BattleState = {
+    fleets: defender.fleets.map(f => ({ ...f, isActive: true })),
+    individualShips: defender.individualShips,
+    advancements: defender.advancements,
+    hasStarbase: defender.hasStarbase,
+    weapons: defender.weapons,
+    shields: defender.shields,
+    inBreenTerritory: defender.inBreenTerritory,
+    ascendancy: defender.ascendancy
+  };
   
   // Check for first strike from advancements
-  const attackerFirstStrike = attacker.advancements.some(adv => adv.effects.firstStrike);
-  const defenderFirstStrike = defender.advancements.some(adv => adv.effects.firstStrike);
-  const firstStrike = attackerFirstStrike && !defenderFirstStrike ? 'attacker' : 
-                     defenderFirstStrike && !attackerFirstStrike ? 'defender' : null;
+  // Only attackers can use first strike (since it only applies "during your turn")
+  const attackerFirstStrike = attackerState.advancements.some(adv => adv.effects.firstStrike);
+  
+  // Tachyon Detection Array blocks Klingon/Romulan cloaking (first strike) but not Breen cloaking
+  const defenderHasTachyonArray = defenderState.advancements.some(adv => adv.effects.blocksCloaking);
+  const attackerHasKlingonRomulanCloaking = attackerFirstStrike && attackerState.advancements.some(adv => 
+    adv.effects.firstStrike && (adv.name === 'Adapted Cloaking Device' || adv.name === 'Romulan Cloaking Device')
+  );
+  
+  // Block first strike if defender has Tachyon Detection Array and attacker is using Klingon/Romulan cloaking
+  const firstStrike = (attackerFirstStrike && !(defenderHasTachyonArray && attackerHasKlingonRomulanCloaking)) ? 'attacker' : null;
   
   // Calculate hit requirements
-  const attackerHitRoll = Math.max(1, 5 - attacker.weapons) + defender.shields;
-  const defenderHitRoll = Math.max(1, 5 - defender.weapons) + attacker.shields;
+  const attackerHitRoll = Math.max(1, 5 - attackerState.weapons) + defenderState.shields;
+  const defenderHitRoll = Math.max(1, 5 - defenderState.weapons) + attackerState.shields;
   
   // Check for invulnerable shields (but account for advancements that bypass shields)
-  const attackerHasIgnoreShieldsOn6 = attacker.advancements.some(adv => adv.effects.ignoreShieldsOn6);
-  const defenderHasIgnoreShieldsOn6 = defender.advancements.some(adv => adv.effects.ignoreShieldsOn6);
+  const attackerHasIgnoreShieldsOn6 = attackerState.advancements.some(adv => adv.effects.ignoreShieldsOn6);
+  const defenderHasIgnoreShieldsOn6 = defenderState.advancements.some(adv => adv.effects.ignoreShieldsOn6);
   
   const attackerCanHit = attackerHitRoll <= 6 || attackerHasIgnoreShieldsOn6;
   const defenderCanHit = defenderHitRoll <= 6 || defenderHasIgnoreShieldsOn6;
@@ -76,88 +138,125 @@ function simulateBattle(attacker: PlayerSetup, defender: PlayerSetup): 'attacker
   
   let isFirstRound = true;
   
-  while (attackerShips > 0 && defenderShips > 0) {
+  while (getTotalShipsInBattle(attackerState) > 0 && getTotalShipsInBattle(defenderState) > 0) {
     let attackerHits = 0;
     let defenderHits = 0;
     
-    // Handle first strike
+    // Handle first strike (only attackers can have first strike)
     if (isFirstRound && firstStrike === 'attacker') {
       if (attackerCanHit) {
-        attackerHits = rollHitsForPlayer(attacker, attackerHitRoll, defender.shields);
+        attackerHits = rollHitsForBattleState(attackerState, attackerHitRoll, isFirstRound);
       }
-      defenderShips = Math.max(0, defenderShips - attackerHits);
+      allocateHits(defenderState, attackerHits);
       
-      if (defenderCanHit && defenderShips > 0) {
-        defenderHits = rollHitsForPlayer(defender, defenderHitRoll, attacker.shields);
+      if (defenderCanHit && getTotalShipsInBattle(defenderState) > 0) {
+        defenderHits = rollHitsForBattleState(defenderState, defenderHitRoll, isFirstRound);
       }
-      attackerShips = Math.max(0, attackerShips - defenderHits);
-    } else if (isFirstRound && firstStrike === 'defender') {
-      if (defenderCanHit) {
-        defenderHits = rollHitsForPlayer(defender, defenderHitRoll, attacker.shields);
-      }
-      attackerShips = Math.max(0, attackerShips - defenderHits);
-      
-      if (attackerCanHit && attackerShips > 0) {
-        attackerHits = rollHitsForPlayer(attacker, attackerHitRoll, defender.shields);
-      }
-      defenderShips = Math.max(0, defenderShips - attackerHits);
+      allocateHits(attackerState, defenderHits);
     } else {
       // Simultaneous combat
       if (attackerCanHit) {
-        attackerHits = rollHitsForPlayer(attacker, attackerHitRoll, defender.shields);
+        attackerHits = rollHitsForBattleState(attackerState, attackerHitRoll, isFirstRound);
       }
       if (defenderCanHit) {
-        defenderHits = rollHitsForPlayer(defender, defenderHitRoll, attacker.shields);
+        defenderHits = rollHitsForBattleState(defenderState, defenderHitRoll, isFirstRound);
       }
       
-      attackerShips = Math.max(0, attackerShips - defenderHits);
-      defenderShips = Math.max(0, defenderShips - attackerHits);
+      allocateHits(attackerState, defenderHits);
+      allocateHits(defenderState, attackerHits);
     }
     
     isFirstRound = false;
   }
   
-  return attackerShips > 0 ? 'attacker' : 'defender';
+  return getTotalShipsInBattle(attackerState) > 0 ? 'attacker' : 'defender';
 }
 
-// Roll hits for a player, considering advancement, fleet, and starbase effects
-function rollHitsForPlayer(player: PlayerSetup, hitRoll: number, opponentShields: number): number {
+// Get total ships currently in battle (active fleets + individual ships)
+function getTotalShipsInBattle(state: BattleState): number {
+  const fleetShips = state.fleets
+    .filter(f => f.isActive)
+    .reduce((total, fleet) => total + fleet.shipCount, 0);
+  return fleetShips + state.individualShips;
+}
+
+// Roll hits for a battle state, considering fleet abilities and advancements
+function rollHitsForBattleState(state: BattleState, hitRoll: number, isFirstRound: boolean = false): number {
   let totalHits = 0;
-  const hasIgnoreShieldsOn6 = player.advancements.some(adv => adv.effects.ignoreShieldsOn6);
-  const hasDoublesKillOnMiss = player.advancements.some(adv => adv.effects.doublesKillOnMiss);
-  const hasWeaponizedStarbases = player.advancements.some(adv => adv.name === 'Weaponized Starbases');
+  const hasIgnoreShieldsOn6 = state.advancements.some(adv => adv.effects.ignoreShieldsOn6);
+  const hasIgnoreShieldsOn5Or6 = state.advancements.some(adv => adv.effects.ignoreShieldsOn5Or6);
+  const hasDoublesKillOnMiss = state.advancements.some(adv => adv.effects.doublesKillOnMiss);
+  const hasWeaponizedStarbases = state.advancements.some(adv => adv.name === 'Weaponized Starbases');
+  const hasRerollOneMiss = state.advancements.some(adv => adv.effects.rerollOneMiss);
+  const hasStoneOfGol = state.advancements.some(adv => adv.effects.stoneOfGol);
+  
+  // Check if this is a Breen player in Breen territory (can reroll all failed hits)
+  // The Breen territorial special ability allows rerolling all failed hits in Breen territory
+  const isBreenInTerritory = state.inBreenTerritory;
   
   const allRolls: number[] = [];
   
-  // Roll for each fleet separately to handle fleet-specific abilities
-  for (const fleetAllocation of player.fleets) {
+  // Roll for each active fleet separately to handle fleet-specific abilities
+  for (const fleetAllocation of state.fleets) {
+    if (!fleetAllocation.isActive) continue;
+    
     const fleet = fleetAllocation.fleet;
     const shipCount = fleetAllocation.shipCount;
-    const canRerollOnes = fleet.effects.rerollOnes || false;
+    const canRerollOnes = fleet.effects?.rerollOnes || false;
+    const hasDoubleDiceInTerritory = fleet.effects?.doubleDiceInTerritory || false;
+    const hasAutoHitFirstRound = fleet.effects?.autoHitFirstRound || false;
+    // Since fleets no longer have faction property, Breen territory applies to all fleets of a Breen player
+    const isBreenFleet = isBreenInTerritory;
+    
+    // System Patrol gets double dice in Breen territory
+    const dicePerShip = (hasDoubleDiceInTerritory && isBreenInTerritory) ? 2 : 1;
     
     for (let i = 0; i < shipCount; i++) {
-      let roll = Math.floor(Math.random() * 6) + 1;
-      
-      // Handle Battle Group reroll 1s ability
-      if (canRerollOnes && roll === 1) {
-        roll = Math.floor(Math.random() * 6) + 1; // Reroll the 1
-      }
-      
-      allRolls.push(roll);
-      
-      // Check for hit
-      if (roll >= hitRoll) {
-        totalHits++;
-      } else if (hasIgnoreShieldsOn6 && roll === 6) {
-        // Disruptor Technology: 6s always hit regardless of shields
-        totalHits++;
+      for (let diceRoll = 0; diceRoll < dicePerShip; diceRoll++) {
+        // Hunter Killer: auto-hit in first round
+        if (hasAutoHitFirstRound && isFirstRound) {
+          totalHits++; // Automatic hit, no dice roll needed
+          allRolls.push(6); // Record as a 6 for tracking purposes
+          continue;
+        }
+        
+        let roll = Math.floor(Math.random() * 6) + 1;
+        
+        // Handle Battle Group reroll 1s ability
+        if (canRerollOnes && roll === 1) {
+          roll = Math.floor(Math.random() * 6) + 1; // Reroll the 1
+        }
+        
+        // Handle Breen territory reroll ability (reroll all failed hits)
+        if (isBreenFleet && isBreenInTerritory && roll < hitRoll && !(hasIgnoreShieldsOn6 && roll === 6) && !(hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6))) {
+          roll = Math.floor(Math.random() * 6) + 1; // Reroll the failed hit
+        }
+        
+        allRolls.push(roll);
+        
+        // Check for hit
+        if (roll >= hitRoll) {
+          totalHits++;
+        } else if (hasIgnoreShieldsOn6 && roll === 6) {
+          // Disruptor Technology: 6s always hit regardless of shields
+          totalHits++;
+        } else if (hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6)) {
+          // Energy Damping Weapons: 5s and 6s always hit regardless of shields
+          totalHits++;
+        }
       }
     }
   }
   
-  // Roll for individual ships (no fleet abilities)
-  for (let i = 0; i < player.individualShips; i++) {
-    const roll = Math.floor(Math.random() * 6) + 1;
+  // Roll for individual ships (no fleet abilities, but can benefit from Breen territory)
+  for (let i = 0; i < state.individualShips; i++) {
+    let roll = Math.floor(Math.random() * 6) + 1;
+    
+    // Handle Breen territory reroll ability for individual ships
+    if (isBreenInTerritory && roll < hitRoll && !(hasIgnoreShieldsOn6 && roll === 6) && !(hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6))) {
+      roll = Math.floor(Math.random() * 6) + 1; // Reroll the failed hit
+    }
+    
     allRolls.push(roll);
     
     // Check for hit
@@ -166,11 +265,14 @@ function rollHitsForPlayer(player: PlayerSetup, hitRoll: number, opponentShields
     } else if (hasIgnoreShieldsOn6 && roll === 6) {
       // Disruptor Technology: 6s always hit regardless of shields
       totalHits++;
+    } else if (hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6)) {
+      // Energy Damping Weapons: 5s and 6s always hit regardless of shields
+      totalHits++;
     }
   }
   
   // Starbase support: roll additional dice
-  if (player.hasStarbase) {
+  if (state.hasStarbase) {
     const starbaseDice = hasWeaponizedStarbases ? 3 : 1;
     for (let i = 0; i < starbaseDice; i++) {
       const roll = Math.floor(Math.random() * 6) + 1;
@@ -182,13 +284,46 @@ function rollHitsForPlayer(player: PlayerSetup, hitRoll: number, opponentShields
       } else if (hasIgnoreShieldsOn6 && roll === 6) {
         // Disruptor Technology: 6s always hit regardless of shields
         totalHits++;
+      } else if (hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6)) {
+        // Energy Damping Weapons: 5s and 6s always hit regardless of shields
+        totalHits++;
+      }
+    }
+  }
+  
+  // Stone of Gol: reroll any dice equal to or higher than Ascendancy that are currently misses
+  if (hasStoneOfGol && state.ascendancy > 0) {
+    for (let i = 0; i < allRolls.length; i++) {
+      const roll = allRolls[i];
+      // Check if this roll is >= Ascendancy AND is currently a miss
+      const isCurrentlyMiss = roll < hitRoll && 
+        !(hasIgnoreShieldsOn6 && roll === 6) && 
+        !(hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6));
+      
+      if (roll >= state.ascendancy && isCurrentlyMiss) {
+        // Reroll this die
+        const newRoll = Math.floor(Math.random() * 6) + 1;
+        allRolls[i] = newRoll;
+        
+        // Check if the new roll is now a hit
+        if (newRoll >= hitRoll) {
+          totalHits++;
+        } else if (hasIgnoreShieldsOn6 && newRoll === 6) {
+          totalHits++;
+        } else if (hasIgnoreShieldsOn5Or6 && (newRoll === 5 || newRoll === 6)) {
+          totalHits++;
+        }
       }
     }
   }
   
   // Mass Fire Tactics: doubles on misses kill 1 ship
   if (hasDoublesKillOnMiss) {
-    const missRolls = allRolls.filter(roll => roll < hitRoll && !(hasIgnoreShieldsOn6 && roll === 6));
+    const missRolls = allRolls.filter(roll => 
+      roll < hitRoll && 
+      !(hasIgnoreShieldsOn6 && roll === 6) && 
+      !(hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6))
+    );
     const doubles = new Set();
     missRolls.forEach(roll => {
       if (missRolls.filter(r => r === roll).length >= 2) {
@@ -198,8 +333,66 @@ function rollHitsForPlayer(player: PlayerSetup, hitRoll: number, opponentShields
     totalHits += doubles.size;
   }
   
+  // Superior Targeting Array: reroll one miss per round
+  if (hasRerollOneMiss) {
+    const missRolls = allRolls.filter(roll => 
+      roll < hitRoll && 
+      !(hasIgnoreShieldsOn6 && roll === 6) && 
+      !(hasIgnoreShieldsOn5Or6 && (roll === 5 || roll === 6))
+    );
+    if (missRolls.length > 0) {
+      // Reroll the first miss
+      let reroll = Math.floor(Math.random() * 6) + 1;
+      if (reroll >= hitRoll) {
+        totalHits++;
+      } else if (hasIgnoreShieldsOn6 && reroll === 6) {
+        totalHits++;
+      } else if (hasIgnoreShieldsOn5Or6 && (reroll === 5 || reroll === 6)) {
+        totalHits++;
+      }
+    }
+  }
+  
   return totalHits;
 }
+
+// Allocate hits to fleets first, then individual ships, handling fleet disbanding
+function allocateHits(state: BattleState, hits: number): void {
+  let remainingHits = hits;
+  
+  // Superior Shield Harmonics: each fleet may ignore the first casualty in each round
+  const hasIgnoreFirstCasualty = state.advancements.some(adv => adv.effects.ignoreFirstCasualty);
+  
+  // First, allocate hits to active fleets
+  for (const fleetAllocation of state.fleets) {
+    if (!fleetAllocation.isActive || remainingHits <= 0) continue;
+    
+    let hitsToFleet = Math.min(remainingHits, fleetAllocation.shipCount);
+    
+    // Superior Shield Harmonics: this fleet ignores its first casualty
+    if (hasIgnoreFirstCasualty && hitsToFleet > 0) {
+      hitsToFleet--; // This fleet ignores its first hit
+    }
+    
+    fleetAllocation.shipCount -= hitsToFleet;
+    remainingHits -= hitsToFleet;
+    
+    // Check if fleet should be disbanded
+    if (fleetAllocation.shipCount < fleetAllocation.fleet.minShips) {
+      // Fleet is disbanded - move remaining ships to individual ships
+      state.individualShips += fleetAllocation.shipCount;
+      fleetAllocation.shipCount = 0;
+      fleetAllocation.isActive = false;
+    }
+  }
+  
+  // Then, allocate remaining hits to individual ships
+  if (remainingHits > 0) {
+    state.individualShips = Math.max(0, state.individualShips - remainingHits);
+  }
+}
+
+
 
 // Run multiple battle simulations
 function runSimulation(attacker: PlayerSetup, defender: PlayerSetup, numBattles: number = 1000): BattleResult {
@@ -223,9 +416,7 @@ function runSimulation(attacker: PlayerSetup, defender: PlayerSetup, numBattles:
 }
 
 export default function Home() {
-  const [allAdvancements, setAllAdvancements] = useState<Advancement[]>([]);
-  const [allFleets, setAllFleets] = useState<Fleet[]>([]);
-  const [factions] = useState<string[]>(['klingon']); // Will expand as more factions are added
+  const [factions, setFactions] = useState<Faction[]>([]);
   
   const [attacker, setAttacker] = useState<PlayerSetup>({
     faction: '',
@@ -234,7 +425,9 @@ export default function Home() {
     advancements: [],
     fleets: [],
     individualShips: 0,
-    hasStarbase: false
+    hasStarbase: false,
+    inBreenTerritory: false,
+    ascendancy: 0
   });
   
   const [defender, setDefender] = useState<PlayerSetup>({
@@ -244,7 +437,9 @@ export default function Home() {
     advancements: [],
     fleets: [],
     individualShips: 0,
-    hasStarbase: false
+    hasStarbase: false,
+    inBreenTerritory: false,
+    ascendancy: 0
   });
   
   const [result, setResult] = useState<BattleResult | null>(null);
@@ -255,16 +450,9 @@ export default function Home() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [advResponse, fleetResponse] = await Promise.all([
-          fetch('/advancments.json'),
-          fetch('/fleets.json')
-        ]);
-        
-        const advancements = await advResponse.json();
-        const fleets = await fleetResponse.json();
-        
-        setAllAdvancements(advancements);
-        setAllFleets(fleets);
+        const response = await fetch('/factions.json');
+        const factionsData = await response.json();
+        setFactions(factionsData);
       } catch (error) {
         console.error('Failed to load data:', error);
       }
@@ -293,16 +481,18 @@ export default function Home() {
   };
   
   const handleFactionChange = (player: 'attacker' | 'defender', faction: string) => {
-    const startingAdvancements = allAdvancements.filter(adv => 
-      adv.faction === faction && adv.isStartingAdvancement
-    );
+    const selectedFaction = factions.find(f => f.name === faction);
+    const startingAdvancements = selectedFaction?.advancements.filter(adv => 
+      adv.isStartingAdvancement
+    ) || [];
     
     updatePlayer(player, {
       faction,
       advancements: startingAdvancements,
       fleets: [],
       individualShips: 0,
-      hasStarbase: false
+      hasStarbase: false,
+      inBreenTerritory: false
     });
   };
   
@@ -341,8 +531,9 @@ export default function Home() {
   };
   
   const renderPlayerSetup = (player: 'attacker' | 'defender', playerData: PlayerSetup) => {
-    const availableAdvancements = allAdvancements.filter(adv => adv.faction === playerData.faction);
-    const availableFleets = allFleets.filter(fleet => fleet.faction === playerData.faction);
+    const selectedFaction = factions.find(f => f.name === playerData.faction);
+    const availableAdvancements = selectedFaction?.advancements || [];
+    const availableFleets = selectedFaction?.fleets || [];
     const playerColor = player === 'attacker' ? 'text-red-300' : 'text-blue-300';
     
     return (
@@ -361,8 +552,8 @@ export default function Home() {
           >
             <option value="">Select Faction</option>
             {factions.map(faction => (
-              <option key={faction} value={faction}>
-                {faction.charAt(0).toUpperCase() + faction.slice(1)}
+              <option key={faction.name} value={faction.name}>
+                {faction.name}
               </option>
             ))}
           </select>
@@ -422,13 +613,38 @@ export default function Home() {
               </div>
             </div>
             
+            {/* Special Abilities - show checkboxes for faction-specific abilities */}
+            {selectedFaction?.specialAbilities && selectedFaction.specialAbilities.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-medium mb-2">Special Abilities</h3>
+                {selectedFaction.specialAbilities.map(ability => {
+                  if (ability.type === 'territorial' && ability.effects.rerollFailedHits) {
+                    return (
+                      <label key={ability.name} className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          checked={playerData.inBreenTerritory}
+                          onChange={(e) => updatePlayer(player, { inBreenTerritory: e.target.checked })}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{ability.ability}</span>
+                      </label>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
+            
             {/* Advancements */}
             <div className="mb-4">
               <h3 className="text-sm font-medium mb-2">Advancements</h3>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
+              <div className="space-y-2">
                 {availableAdvancements.map(advancement => {
                   const isSelected = playerData.advancements.some(adv => adv.name === advancement.name);
                   const isStarting = advancement.isStartingAdvancement;
+                  const isFirstStrike = advancement.effects.firstStrike;
+                  const isDefenderFirstStrike = player === 'defender' && isFirstStrike;
                   
                   return (
                     <label key={advancement.name} className="flex items-start space-x-2">
@@ -436,20 +652,52 @@ export default function Home() {
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleAdvancement(player, advancement)}
-                        disabled={isStarting}
+                        disabled={isStarting || isDefenderFirstStrike}
                         className="mt-1"
                       />
                       <div className="flex-1">
-                        <div className={`text-xs ${isStarting ? 'text-yellow-400' : 'text-white'}`}>
-                          {advancement.name} {isStarting && '(Starting)'}
+                        <div className={`text-xs ${
+                          isStarting ? 'text-yellow-400' : 
+                          isDefenderFirstStrike ? 'text-gray-500' : 
+                          'text-white'
+                        }`}>
+                          {advancement.name} 
+                          {isStarting && '(Starting)'}
+                          {isDefenderFirstStrike && '(Attacker Only)'}
                         </div>
-                        <div className="text-xs text-gray-400">{advancement.ability}</div>
+                        <div className={`text-xs ${
+                          isDefenderFirstStrike ? 'text-gray-600' : 'text-gray-400'
+                        }`}>
+                          {advancement.ability}
+                        </div>
                       </div>
                     </label>
                   );
                 })}
               </div>
             </div>
+            
+            {/* Stone of Gol Ascendancy Input */}
+            {playerData.advancements.some(adv => adv.effects.stoneOfGol) && (
+              <div className="mb-4">
+                <label className="block text-sm mb-2">Current Ascendancy (for Stone of Gol)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="6"
+                  value={playerData.ascendancy}
+                  onChange={(e) => {
+                    const value = Math.max(0, Math.min(6, parseInt(e.target.value) || 0));
+                    updatePlayer(player, { ascendancy: value });
+                  }}
+                  className="w-20 px-3 py-2 bg-gray-700 rounded border border-gray-600 text-white"
+                  placeholder="0-6"
+                />
+                <div className="text-xs text-gray-400 mt-1">
+                  Reroll miss dice ≥ this value (0-6)
+                </div>
+              </div>
+            )}
             
             {/* Fleets */}
             <div className="mb-4">
@@ -513,9 +761,23 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-black text-white p-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-center mb-6 text-yellow-400">
-          Star Trek Ascendancy<br />Space Battle Simulator
-        </h1>
+        <div className="text-center mb-6">
+          <a 
+            href="https://startrek.gf9games.com/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <img 
+              src="/StarTrek-Header.jpg" 
+              alt="Star Trek Ascendancy Space Battle Simulator" 
+              className="mx-auto max-w-full h-auto rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+            />
+          </a>
+          <h1 className="text-4xl font-bold text-yellow-400 mt-4">
+            Space Battle Simulator!
+          </h1>
+        </div>
         
         {renderPlayerSetup('attacker', attacker)}
         {renderPlayerSetup('defender', defender)}
@@ -561,24 +823,39 @@ export default function Home() {
             
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-red-300">Attacker Wins:</span>
+                <span className="text-red-300">{attacker.faction || 'Attacker'} Wins:</span>
                 <span className="font-bold">
                   {result.attackerWins} ({((result.attackerWins / result.totalBattles) * 100).toFixed(1)}%)
                 </span>
               </div>
               
               <div className="flex justify-between items-center">
-                <span className="text-blue-300">Defender Wins:</span>
+                <span className="text-blue-300">{defender.faction || 'Defender'} Wins:</span>
                 <span className="font-bold">
                   {result.defenderWins} ({((result.defenderWins / result.totalBattles) * 100).toFixed(1)}%)
                 </span>
               </div>
               
-              <div className="mt-4 bg-gray-700 rounded-full h-4 overflow-hidden">
+              <div className="mt-4 bg-gray-700 rounded-full h-4 overflow-hidden relative">
+                {/* Attacker (Red) Section */}
                 <div 
-                  className="h-full bg-red-500 transition-all duration-500"
+                  className="h-full bg-red-500 transition-all duration-500 absolute left-0"
                   style={{ width: `${(result.attackerWins / result.totalBattles) * 100}%` }}
                 ></div>
+                
+                {/* Defender (Blue) Section */}
+                <div 
+                  className="h-full bg-blue-500 transition-all duration-500 absolute right-0"
+                  style={{ width: `${(result.defenderWins / result.totalBattles) * 100}%` }}
+                ></div>
+                
+                {/* White Separator Line */}
+                {result.attackerWins > 0 && result.defenderWins > 0 && (
+                  <div 
+                    className="absolute top-0 bottom-0 w-0.5 bg-white transition-all duration-500"
+                    style={{ left: `${(result.attackerWins / result.totalBattles) * 100}%` }}
+                  ></div>
+                )}
               </div>
               
               <div className="text-xs text-gray-400 text-center mt-2">
@@ -588,10 +865,7 @@ export default function Home() {
           </div>
         )}
         
-        <div className="mt-6 text-xs text-gray-400 text-center">
-          <p>Simulates basic Star Trek Ascendancy space battle rules.</p>
-          <p>Hit rolls: 5+ base, modified by weapons and shields.</p>
-        </div>
+
       </div>
     </div>
   );
