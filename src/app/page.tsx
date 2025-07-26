@@ -597,6 +597,7 @@ export default function Home() {
 
   const [result, setResult] = useState<BattleResult | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<
     'attacker' | 'defender' | 'ready'
   >('attacker');
@@ -627,6 +628,11 @@ export default function Home() {
     const battleResult = runSimulation(attacker, defender);
     setResult(battleResult);
     setIsSimulating(false);
+  };
+
+  const showCopyFeedback = () => {
+    setCopyFeedback('Copied!');
+    setTimeout(() => setCopyFeedback(null), 2000);
   };
 
   const updatePlayer = (
@@ -1307,7 +1313,7 @@ export default function Home() {
                     navigator.clipboard.writeText(
                       'bc1qg944svjz7wydutldlzzfyxt04jaf5l3gvdquln'
                     );
-                    alert('BTC address copied to clipboard!');
+                    showCopyFeedback();
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
                 >
@@ -1331,7 +1337,7 @@ export default function Home() {
                     navigator.clipboard.writeText(
                       '0x4C5B8E063A2b23926B9621619e90B5560B0F8AFc'
                     );
-                    alert('ETH address copied to clipboard!');
+                    showCopyFeedback();
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
                 >
@@ -1355,7 +1361,7 @@ export default function Home() {
                     navigator.clipboard.writeText(
                       'LhLXVEsnWQoB8ozRRsBUNZ3qgJuZPf1Qy5'
                     );
-                    alert('LTC address copied to clipboard!');
+                    showCopyFeedback();
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
                 >
@@ -1379,7 +1385,7 @@ export default function Home() {
                     navigator.clipboard.writeText(
                       '48fMCSTJqZxFNY5RSwkfoa1GsffjxzZu6Wnk2x49VxKd3UGaaHWd86jTte6fWrtS7m2y6mTFKCCRMBxAVU51zNceAADkLpZ'
                     );
-                    alert('XMR address copied to clipboard!');
+                    showCopyFeedback();
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
                 >
@@ -1393,6 +1399,13 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Copy Feedback Popup */}
+      {copyFeedback && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-pulse">
+          {copyFeedback}
+        </div>
+      )}
     </div>
   );
 }
