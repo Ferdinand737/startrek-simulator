@@ -69,6 +69,18 @@ interface BattleResult {
   attackerWins: number;
   defenderWins: number;
   totalBattles: number;
+  attackerCasualties: {
+    totalLosses: number;
+    averageLosses: number;
+    averageRemaining: number;
+    lossPercentage: number;
+  };
+  defenderCasualties: {
+    totalLosses: number;
+    averageLosses: number;
+    averageRemaining: number;
+    lossPercentage: number;
+  };
 }
 
 // Battle state for tracking fleets and individual ships during combat
@@ -87,7 +99,11 @@ interface BattleState {
 function simulateBattle(
   attacker: PlayerSetup,
   defender: PlayerSetup
-): 'attacker' | 'defender' {
+): {
+  winner: 'attacker' | 'defender';
+  attackerLosses: number;
+  defenderLosses: number;
+} {
   // Create mutable battle states
   const attackerState: BattleState = {
     fleets: attacker.fleets.map((f) => ({ ...f, isActive: true })),
@@ -155,7 +171,11 @@ function simulateBattle(
   const defenderCanHit = defenderHitRoll <= 6 || defenderHasIgnoreShieldsOn6;
 
   if (!attackerCanHit && !defenderCanHit) {
-    return 'defender';
+    return {
+      winner: 'defender',
+      attackerLosses: 0,
+      defenderLosses: 0,
+    };
   }
 
   let isFirstRound = true;
@@ -210,7 +230,28 @@ function simulateBattle(
     isFirstRound = false;
   }
 
-  return getTotalShipsInBattle(attackerState) > 0 ? 'attacker' : 'defender';
+  // Calculate casualties
+  const attackerInitialShips = getTotalShips(attacker);
+  const defenderInitialShips = getTotalShips(defender);
+  const attackerRemainingShips = getTotalShipsInBattle(attackerState);
+  const defenderRemainingShips = getTotalShipsInBattle(defenderState);
+
+  const attackerLosses = attackerInitialShips - attackerRemainingShips;
+  const defenderLosses = defenderInitialShips - defenderRemainingShips;
+
+  return {
+    winner: getTotalShipsInBattle(attackerState) > 0 ? 'attacker' : 'defender',
+    attackerLosses,
+    defenderLosses,
+  };
+}
+
+// Get total ships for a player setup (for initial ship count calculation)
+function getTotalShips(playerData: PlayerSetup): number {
+  return (
+    playerData.fleets.reduce((total, fleet) => total + fleet.shipCount, 0) +
+    playerData.individualShips
+  );
 }
 
 // Get total ships currently in battle (active fleets + individual ships)
@@ -474,20 +515,56 @@ function runSimulation(
 ): BattleResult {
   let attackerWins = 0;
   let defenderWins = 0;
+  let attackerWinLosses = 0;
+  let defenderWinLosses = 0;
+
+  const attackerInitialShips = getTotalShips(attacker);
+  const defenderInitialShips = getTotalShips(defender);
 
   for (let i = 0; i < numBattles; i++) {
     const result = simulateBattle(attacker, defender);
-    if (result === 'attacker') {
+
+    if (result.winner === 'attacker') {
       attackerWins++;
+      attackerWinLosses += result.attackerLosses;
     } else {
       defenderWins++;
+      defenderWinLosses += result.defenderLosses;
     }
   }
+
+  // Calculate casualty statistics - only for battles where each side wins
+  const attackerAverageLosses =
+    attackerWins > 0 ? attackerWinLosses / attackerWins : 0;
+  const defenderAverageLosses =
+    defenderWins > 0 ? defenderWinLosses / defenderWins : 0;
+
+  const attackerAverageRemaining =
+    attackerWins > 0 ? attackerInitialShips - attackerAverageLosses : 0;
+  const defenderAverageRemaining =
+    defenderWins > 0 ? defenderInitialShips - defenderAverageLosses : 0;
+
+  const attackerLossPercentage =
+    attackerWins > 0 ? (attackerAverageLosses / attackerInitialShips) * 100 : 0;
+  const defenderLossPercentage =
+    defenderWins > 0 ? (defenderAverageLosses / defenderInitialShips) * 100 : 0;
 
   return {
     attackerWins,
     defenderWins,
     totalBattles: numBattles,
+    attackerCasualties: {
+      totalLosses: attackerWinLosses,
+      averageLosses: attackerAverageLosses,
+      averageRemaining: attackerAverageRemaining,
+      lossPercentage: attackerLossPercentage,
+    },
+    defenderCasualties: {
+      totalLosses: defenderWinLosses,
+      averageLosses: defenderAverageLosses,
+      averageRemaining: defenderAverageRemaining,
+      lossPercentage: defenderLossPercentage,
+    },
   };
 }
 
@@ -673,7 +750,8 @@ export default function Home() {
                   type="number"
                   min="0"
                   max="5"
-                  value={playerData.weapons}
+                  value={playerData.weapons === 0 ? '' : playerData.weapons}
+                  placeholder="0"
                   onChange={(e) =>
                     updatePlayer(player, {
                       weapons: parseInt(e.target.value) || 0,
@@ -688,7 +766,8 @@ export default function Home() {
                   type="number"
                   min="0"
                   max="5"
-                  value={playerData.shields}
+                  value={playerData.shields === 0 ? '' : playerData.shields}
+                  placeholder="0"
                   onChange={(e) =>
                     updatePlayer(player, {
                       shields: parseInt(e.target.value) || 0,
@@ -707,7 +786,12 @@ export default function Home() {
                   type="number"
                   min="0"
                   max="20"
-                  value={playerData.individualShips}
+                  value={
+                    playerData.individualShips === 0
+                      ? ''
+                      : playerData.individualShips
+                  }
+                  placeholder="0"
                   onChange={(e) =>
                     updatePlayer(player, {
                       individualShips: parseInt(e.target.value) || 0,
@@ -832,7 +916,9 @@ export default function Home() {
                   type="number"
                   min="0"
                   max="6"
-                  value={playerData.ascendancy}
+                  value={
+                    playerData.ascendancy === 0 ? '' : playerData.ascendancy
+                  }
                   onChange={(e) => {
                     const value = Math.max(
                       0,
@@ -1082,9 +1168,230 @@ export default function Home() {
               <div className="text-xs text-gray-400 text-center mt-2">
                 Based on {result.totalBattles} simulated battles
               </div>
+
+              {/* Expected Casualties for Winner */}
+              <div className="mt-6 pt-4 border-t border-gray-600">
+                <h3 className="text-sm font-semibold text-yellow-300 mb-3 text-center">
+                  Expected Winner Casualties
+                </h3>
+
+                {result.attackerWins > result.defenderWins ? (
+                  // Attacker is more likely to win
+                  <div className="bg-red-900/30 rounded-lg p-4">
+                    <div className="text-center mb-2">
+                      <span className="text-red-300 font-semibold">
+                        {attacker.faction} Victory
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="text-gray-400">
+                          Average Ships Lost %
+                        </div>
+                        <div className="text-red-300 font-bold">
+                          {result.attackerCasualties.lossPercentage.toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-400">Average Ships Lost</div>
+                        <div className="text-red-300 font-bold">
+                          {result.attackerCasualties.averageLosses.toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-400">
+                          Average Ships Remaining
+                        </div>
+                        <div className="text-red-300 font-bold">
+                          {result.attackerCasualties.averageRemaining.toFixed(
+                            1
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Defender is more likely to win
+                  <div className="bg-blue-900/30 rounded-lg p-4">
+                    <div className="text-center mb-2">
+                      <span className="text-blue-300 font-semibold">
+                        {defender.faction} Victory
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="text-center">
+                        <div className="text-gray-400">Loss %</div>
+                        <div className="text-blue-300 font-bold">
+                          {result.defenderCasualties.lossPercentage.toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-400">Ships Lost</div>
+                        <div className="text-blue-300 font-bold">
+                          {result.defenderCasualties.averageLosses.toFixed(1)}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-gray-400">Ships Remaining</div>
+                        <div className="text-blue-300 font-bold">
+                          {result.defenderCasualties.averageRemaining.toFixed(
+                            1
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
+
+        {/* Disclaimer */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="text-center">
+            <div className="text-sm font-bold text-gray-400">
+              This simulator is not affiliated with{' '}
+              <a
+                className="text-blue-400 hover:text-blue-300 underline"
+                href="https://startrek.gf9games.com/"
+              >
+                Gale Force 9 Games
+              </a>{' '}
+              in any way!
+            </div>
+          </div>
+        </div>
+
+        {/* GitHub Link */}
+        <div className="bg-gray-800 rounded-lg p-6 mb-6">
+          <div className="text-center">
+            <a
+              href="https://github.com/Ferdinand737/startrek-simulator"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block hover:opacity-80 transition-opacity"
+              title="View Source Code on GitHub"
+            >
+              <img
+                src="/github-mark-white.png"
+                alt="GitHub"
+                className="w-8 h-8 mx-auto"
+              />
+              <br />
+              View Source Code on GitHub
+            </a>
+          </div>
+        </div>
+
+        {/* Donation Section */}
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4 text-yellow-300 text-center">
+            Support Development
+          </h2>
+          <div className="text-center text-sm text-gray-400 mb-4">
+            If you find this simulator useful, consider supporting development
+            with a crypto donation:
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* BTC */}
+            <div className="bg-gray-700 rounded p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <img src="/bitcoin.png" alt="Bitcoin" className="w-6 h-6" />
+                  <span className="font-medium">Bitcoin (BTC)</span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      'bc1qg944svjz7wydutldlzzfyxt04jaf5l3gvdquln'
+                    );
+                    alert('BTC address copied to clipboard!');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="text-xs text-gray-300 break-all font-mono">
+                bc1qg944svjz7wydutldlzzfyxt04jaf5l3gvdquln
+              </div>
+            </div>
+
+            {/* ETH */}
+            <div className="bg-gray-700 rounded p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <img src="/ethereum.png" alt="Ethereum" className="w-6 h-6" />
+                  <span className="font-medium">Ethereum (ETH)</span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      '0x4C5B8E063A2b23926B9621619e90B5560B0F8AFc'
+                    );
+                    alert('ETH address copied to clipboard!');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="text-xs text-gray-300 break-all font-mono">
+                0x4C5B8E063A2b23926B9621619e90B5560B0F8AFc
+              </div>
+            </div>
+
+            {/* LTC */}
+            <div className="bg-gray-700 rounded p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <img src="/litecoin.png" alt="Litecoin" className="w-6 h-6" />
+                  <span className="font-medium">Litecoin (LTC)</span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      'LhLXVEsnWQoB8ozRRsBUNZ3qgJuZPf1Qy5'
+                    );
+                    alert('LTC address copied to clipboard!');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="text-xs text-gray-300 break-all font-mono">
+                LhLXVEsnWQoB8ozRRsBUNZ3qgJuZPf1Qy5
+              </div>
+            </div>
+
+            {/* XMR */}
+            <div className="bg-gray-700 rounded p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <img src="/monero.png" alt="Monero" className="w-6 h-6" />
+                  <span className="font-medium">Monero (XMR)</span>
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      '48fMCSTJqZxFNY5RSwkfoa1GsffjxzZu6Wnk2x49VxKd3UGaaHWd86jTte6fWrtS7m2y6mTFKCCRMBxAVU51zNceAADkLpZ'
+                    );
+                    alert('XMR address copied to clipboard!');
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs"
+                >
+                  Copy
+                </button>
+              </div>
+              <div className="text-xs text-gray-300 break-all font-mono">
+                48fMCSTJqZxFNY5RSwkfoa1GsffjxzZu6Wnk2x49VxKd3UGaaHWd86jTte6fWrtS7m2y6mTFKCCRMBxAVU51zNceAADkLpZ
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
