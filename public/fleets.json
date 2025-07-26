@@ -1,0 +1,33 @@
+[
+  {
+    "faction": "klingon",
+    "id": "1",
+    "name": "Marauders",
+    "maxShips": 4,
+    "minShips": 3,
+    "ability": "Take 1 Production for each Rival Ship destroyed by this fleet",
+    "effects": {
+      "productionOnKill": 1
+    }
+  },
+  {
+    "faction": "klingon",
+    "id": "1.1",
+    "name": "Regular Fleet",
+    "maxShips": 10,
+    "minShips": 3,
+    "ability": "",
+    "effects": {}
+  },
+  {
+    "faction": "klingon",
+    "id": "2",
+    "name": "Battle Group",
+    "maxShips": 6,
+    "minShips": 3,
+    "ability": "This fleet may re-roll To Hit rolls of 1 in Space Battles.",
+    "effects": {
+      "rerollOnes": true
+    }
+  }
+]

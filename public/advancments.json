@@ -1,0 +1,29 @@
+[
+  {
+    "faction": "klingon",
+    "name": "Disruptor Technology",
+    "ability": "Your Rolls To Hit of 6 always Score a Hit, regardless of the Rival's Shield Modifier.",
+    "isStartingAdvancement": true,
+    "effects": {
+      "ignoreShieldsOn6": true
+    }
+  },
+  {
+    "faction": "klingon",
+    "name": "Mass Fire Tactics",
+    "ability": "In Space Battles, failed To Hit Rolls of doubles destroy 1 enemy Ship.",
+    "isStartingAdvancement": false,
+    "effects": {
+      "doublesKillOnMiss": true
+    }
+  },
+  {
+    "faction": "klingon",
+    "name": "Adapted Cloaking Device",
+    "ability": "Your Ships have First Strike in Space Battles during your turn.",
+    "isStartingAdvancement": false,
+    "effects": {
+      "firstStrike": true
+    }
+  }
+]
