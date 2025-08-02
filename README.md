@@ -52,17 +52,7 @@ This is a [Next.js](https://nextjs.org) project built with:
 
 **This simulator is not affiliated with [Gale Force 9 Games](https://startrek.gf9games.com/) in any way.** This is an independent fan project created to help players calculate battle probabilities for the Star Trek Ascendancy board game.
 
-## Support Development
 
-If you find this simulator useful, consider supporting development with a crypto donation:
-
-<img src="public/bitcoin.png" width="20" height="20" alt="Bitcoin" /> **Bitcoin (BTC)**: `bc1qg944svjz7wydutldlzzfyxt04jaf5l3gvdquln`
-<br />
-<img src="public/ethereum.png" width="20" height="20" alt="Ethereum" /> **Ethereum (ETH)**: `0x4C5B8E063A2b23926B9621619e90B5560B0F8AFc`
-<br />
-<img src="public/litecoin.png" width="20" height="20" alt="Litecoin" /> **Litecoin (LTC)**: `LhLXVEsnWQoB8ozRRsBUNZ3qgJuZPf1Qy5`
-<br />
-<img src="public/monero.png" width="20" height="20" alt="Monero" /> **Monero (XMR)**: `48fMCSTJqZxFNY5RSwkfoa1GsffjxzZu6Wnk2x49VxKd3UGaaHWd86jTte6fWrtS7m2y6mTFKCCRMBxAVU51zNceAADkLpZ`
 
 ## License
 
