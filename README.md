@@ -2,17 +2,7 @@
 
 A web-based probability calculator for Star Trek Ascendancy space battles. This simulator allows you to input battle parameters and run 1000 simulated battles to determine win probabilities for different faction matchups.
 
-## Features
-
-- **8 Complete Factions**: Klingon, Romulan, Breen, Cardassian, Federation, Ferengi, Dominion, and Vulcan
-- **Faction-Specific Abilities**: Each faction has unique fleets, advancements, and special abilities
-- **Advanced Mechanics**:
-  - Fleet-specific effects (reroll 1s, auto-hit first round, etc.)
-  - Advancement effects (shield bypass, first strike, reroll mechanics)
-  - Territorial abilities (Breen territory bonuses)
-  - Counter-technologies (Tachyon Detection Array vs cloaking)
-- **Mobile-Friendly Design**: Optimized for both desktop and mobile use
-- **Real-Time Simulation**: Runs 1000 battles instantly with detailed probability results
+[ascendancysim.fun](https://ascendancysim.fun)
 
 ## Getting Started
 
@@ -20,12 +10,7 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -51,8 +36,6 @@ This is a [Next.js](https://nextjs.org) project built with:
 ## Disclaimer
 
 **This simulator is not affiliated with [Gale Force 9 Games](https://startrek.gf9games.com/) in any way.** This is an independent fan project created to help players calculate battle probabilities for the Star Trek Ascendancy board game.
-
-
 
 ## License
 
