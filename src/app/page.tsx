@@ -15,6 +15,7 @@ interface Advancement {
     rerollOneMiss?: boolean;
     blocksCloaking?: boolean;
     stoneOfGol?: boolean;
+    enemyRerollOneHit?: boolean;
   };
 }
 
@@ -29,6 +30,7 @@ interface Fleet {
     rerollOnes?: boolean;
     doubleDiceInTerritory?: boolean;
     autoHitFirstRound?: boolean;
+    andorianTokenBonus?: boolean;
   } | null;
 }
 
@@ -51,6 +53,7 @@ interface Faction {
 interface FleetAllocation {
   fleet: Fleet;
   shipCount: number;
+  hasAndorianToken?: boolean;
 }
 
 interface PlayerSetup {
@@ -85,7 +88,7 @@ interface BattleResult {
 
 // Battle state for tracking fleets and individual ships during combat
 interface BattleState {
-  fleets: Array<{ fleet: Fleet; shipCount: number; isActive: boolean }>;
+  fleets: Array<{ fleet: Fleet; shipCount: number; isActive: boolean; hasAndorianToken?: boolean }>;
   individualShips: number;
   advancements: Advancement[];
   hasStarbase: boolean;
@@ -106,7 +109,7 @@ function simulateBattle(
 } {
   // Create mutable battle states
   const attackerState: BattleState = {
-    fleets: attacker.fleets.map((f) => ({ ...f, isActive: true })),
+    fleets: attacker.fleets.map((f) => ({ ...f, isActive: true, hasAndorianToken: f.hasAndorianToken })),
     individualShips: attacker.individualShips,
     advancements: attacker.advancements,
     hasStarbase: attacker.hasStarbase,
@@ -117,7 +120,7 @@ function simulateBattle(
   };
 
   const defenderState: BattleState = {
-    fleets: defender.fleets.map((f) => ({ ...f, isActive: true })),
+    fleets: defender.fleets.map((f) => ({ ...f, isActive: true, hasAndorianToken: f.hasAndorianToken })),
     individualShips: defender.individualShips,
     advancements: defender.advancements,
     hasStarbase: defender.hasStarbase,
@@ -196,6 +199,12 @@ function simulateBattle(
           isFirstRound
         );
       }
+      
+      // Apply A.I. Tactical Analysis: defender forces attacker to reroll one hit
+      if (defenderState.advancements.some(adv => adv.effects.enemyRerollOneHit) && attackerHits > 0) {
+        attackerHits = Math.max(0, attackerHits - 1);
+      }
+      
       allocateHits(defenderState, attackerHits);
 
       if (defenderCanHit && getTotalShipsInBattle(defenderState) > 0) {
@@ -205,6 +214,12 @@ function simulateBattle(
           isFirstRound
         );
       }
+      
+      // Apply A.I. Tactical Analysis: attacker forces defender to reroll one hit
+      if (attackerState.advancements.some(adv => adv.effects.enemyRerollOneHit) && defenderHits > 0) {
+        defenderHits = Math.max(0, defenderHits - 1);
+      }
+      
       allocateHits(attackerState, defenderHits);
     } else {
       // Simultaneous combat
@@ -221,6 +236,14 @@ function simulateBattle(
           defenderHitRoll,
           isFirstRound
         );
+      }
+
+      // Apply A.I. Tactical Analysis: each side forces opponent to reroll one hit
+      if (defenderState.advancements.some(adv => adv.effects.enemyRerollOneHit) && attackerHits > 0) {
+        attackerHits = Math.max(0, attackerHits - 1);
+      }
+      if (attackerState.advancements.some(adv => adv.effects.enemyRerollOneHit) && defenderHits > 0) {
+        defenderHits = Math.max(0, defenderHits - 1);
       }
 
       allocateHits(attackerState, defenderHits);
@@ -304,6 +327,7 @@ function rollHitsForBattleState(
     const hasDoubleDiceInTerritory =
       fleet.effects?.doubleDiceInTerritory || false;
     const hasAutoHitFirstRound = fleet.effects?.autoHitFirstRound || false;
+    const hasAndorianTokenBonus = fleet.effects?.andorianTokenBonus && fleetAllocation.hasAndorianToken;
     // Since fleets no longer have faction property, Breen territory applies to all fleets of a Breen player
     const isBreenFleet = isBreenInTerritory;
 
@@ -339,8 +363,9 @@ function rollHitsForBattleState(
 
         allRolls.push(roll);
 
-        // Check for hit
-        if (roll >= hitRoll) {
+        // Check for hit (apply Andorian token bonus if applicable)
+        const effectiveHitRoll = hasAndorianTokenBonus ? hitRoll - 1 : hitRoll;
+        if (roll >= effectiveHitRoll) {
           totalHits++;
         } else if (hasIgnoreShieldsOn6 && roll === 6) {
           // Disruptor Technology: 6s always hit regardless of shields
@@ -705,6 +730,16 @@ export default function Home() {
     updatePlayer(player, { fleets: newFleets });
   };
 
+  const toggleAndorianToken = (
+    player: 'attacker' | 'defender',
+    fleetIndex: number
+  ) => {
+    const currentPlayer = player === 'attacker' ? attacker : defender;
+    const newFleets = [...currentPlayer.fleets];
+    newFleets[fleetIndex].hasAndorianToken = !newFleets[fleetIndex].hasAndorianToken;
+    updatePlayer(player, { fleets: newFleets });
+  };
+
   const removeFleet = (player: 'attacker' | 'defender', fleetIndex: number) => {
     const currentPlayer = player === 'attacker' ? attacker : defender;
     const newFleets = currentPlayer.fleets.filter(
@@ -986,6 +1021,25 @@ export default function Home() {
                       {fleetAllocation.fleet.maxShips})
                     </span>
                   </div>
+
+                  {/* Andorian Strike Fleet Token Checkbox */}
+                  {fleetAllocation.fleet.id === '2' && fleetAllocation.fleet.effects?.andorianTokenBonus && (
+                    <div className="mt-2 flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`andorian-token-${player}-${index}`}
+                        checked={fleetAllocation.hasAndorianToken || false}
+                        onChange={() => toggleAndorianToken(player, index)}
+                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                      <label 
+                        htmlFor={`andorian-token-${player}-${index}`}
+                        className="text-xs text-gray-300"
+                      >
+                        Andorian Token Present (+1 to hit)
+                      </label>
+                    </div>
+                  )}
                 </div>
               ))}
 

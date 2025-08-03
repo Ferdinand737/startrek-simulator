@@ -1,0 +1,67 @@
+[debug] [2025-08-03T00:02:25.881Z] ----------------------------------------------------------------------
+[debug] [2025-08-03T00:02:25.883Z] Command:       /home/ferdinand/.nvm/versions/node/v22.16.0/bin/node /home/ferdinand/.nvm/versions/node/v22.16.0/bin/firebase deploy
+[debug] [2025-08-03T00:02:25.883Z] CLI Version:   14.11.1
+[debug] [2025-08-03T00:02:25.883Z] Platform:      linux
+[debug] [2025-08-03T00:02:25.883Z] Node Version:  v22.16.0
+[debug] [2025-08-03T00:02:25.883Z] Time:          Sat Aug 02 2025 17:02:25 GMT-0700 (Pacific Daylight Time)
+[debug] [2025-08-03T00:02:25.883Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-08-03T00:02:25.885Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2025-08-03T00:02:26.069Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-08-03T00:02:26.070Z] > authorizing via signed-in user (epicnews206@gmail.com)
+[debug] [2025-08-03T00:02:26.070Z] [iam] checking project startrek-simulation for permissions ["firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update",null]
+[debug] [2025-08-03T00:02:26.070Z] Checked if tokens are valid: false, expires at: 1753572377950
+[debug] [2025-08-03T00:02:26.070Z] Checked if tokens are valid: false, expires at: 1753572377950
+[debug] [2025-08-03T00:02:26.070Z] > refreshing access token with scopes: []
+[debug] [2025-08-03T00:02:26.071Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-08-03T00:02:26.071Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-03T00:02:26.310Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-08-03T00:02:26.310Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2025-08-03T00:02:26.332Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-08-03T00:02:26.332Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-08-03T00:02:26.343Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/startrek-simulation:testIamPermissions [none]
+[debug] [2025-08-03T00:02:26.343Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/startrek-simulation:testIamPermissions x-goog-quota-user=projects/startrek-simulation
+[debug] [2025-08-03T00:02:26.343Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/startrek-simulation:testIamPermissions {"permissions":["firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update",null]}
+[debug] [2025-08-03T00:02:26.618Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/startrek-simulation:testIamPermissions 200
+[debug] [2025-08-03T00:02:26.618Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/startrek-simulation:testIamPermissions {"permissions":["firebase.projects.get","firebasedatabase.instances.update","firebasehosting.sites.update"]}
+[debug] [2025-08-03T00:02:26.618Z] [iam] error while checking permissions, command may fail: Authorization failed. This account is missing the following required permissions on project startrek-simulation:
+
+  
+[debug] [2025-08-03T00:02:26.618Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:26.619Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:26.619Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/startrek-simulation [none]
+[debug] [2025-08-03T00:02:26.964Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/startrek-simulation 200
+[debug] [2025-08-03T00:02:26.965Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/startrek-simulation {"projectId":"startrek-simulation","projectNumber":"82903193802","displayName":"startrek-simulation","name":"projects/startrek-simulation","resources":{"hostingSite":"startrek-simulation","realtimeDatabaseInstance":"startrek-simulation-default-rtdb"},"state":"ACTIVE","etag":"1_46c382bf-402d-407d-a380-1c9c9958804f"}
+[debug] [2025-08-03T00:02:26.965Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:26.965Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:26.965Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/startrek-simulation [none]
+[debug] [2025-08-03T00:02:27.216Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/startrek-simulation 200
+[debug] [2025-08-03T00:02:27.216Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/startrek-simulation {"projectId":"startrek-simulation","projectNumber":"82903193802","displayName":"startrek-simulation","name":"projects/startrek-simulation","resources":{"hostingSite":"startrek-simulation","realtimeDatabaseInstance":"startrek-simulation-default-rtdb"},"state":"ACTIVE","etag":"1_46c382bf-402d-407d-a380-1c9c9958804f"}
+[info] 
+[info] === Deploying to 'startrek-simulation'...
+[info] 
+[info] i  deploying database, hosting, apphosting 
+[info] i  database: checking rules syntax... 
+[debug] [2025-08-03T00:02:27.220Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:27.220Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:27.220Z] >>> [apiv2][query] GET https://firebasedatabase.googleapis.com/v1beta/projects/startrek-simulation/locations/-/instances/startrek-simulation-default-rtdb [none]
+[debug] [2025-08-03T00:02:27.782Z] <<< [apiv2][status] GET https://firebasedatabase.googleapis.com/v1beta/projects/startrek-simulation/locations/-/instances/startrek-simulation-default-rtdb 200
+[debug] [2025-08-03T00:02:27.782Z] <<< [apiv2][body] GET https://firebasedatabase.googleapis.com/v1beta/projects/startrek-simulation/locations/-/instances/startrek-simulation-default-rtdb {"name":"projects/82903193802/locations/us-central1/instances/startrek-simulation-default-rtdb","project":"projects/82903193802","databaseUrl":"https://startrek-simulation-default-rtdb.firebaseio.com","type":"DEFAULT_DATABASE","state":"ACTIVE"}
+[debug] [2025-08-03T00:02:27.783Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:27.783Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:27.783Z] >>> [apiv2][query] PUT https://startrek-simulation-default-rtdb.firebaseio.com/.settings/rules.json dryRun=true
+[debug] [2025-08-03T00:02:27.783Z] >>> [apiv2][body] PUT https://startrek-simulation-default-rtdb.firebaseio.com/.settings/rules.json "{\n  /* Visit https://firebase.google.com/docs/database/security to learn more about security rules. */\n  \"rules\": {\n    \".read\": false,\n    \".write\": false\n  }\n}"
+[debug] [2025-08-03T00:02:30.225Z] <<< [apiv2][status] PUT https://startrek-simulation-default-rtdb.firebaseio.com/.settings/rules.json 200
+[debug] [2025-08-03T00:02:30.226Z] <<< [apiv2][body] PUT https://startrek-simulation-default-rtdb.firebaseio.com/.settings/rules.json {"status":"ok"}
+[info] ✔  database: rules syntax for database startrek-simulation-default-rtdb is valid 
+[debug] [2025-08-03T00:02:30.229Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:30.229Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:30.229Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/startrek-simulation/versions [none]
+[debug] [2025-08-03T00:02:30.229Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/startrek-simulation/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-08-03T00:02:31.271Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/startrek-simulation/versions 200
+[debug] [2025-08-03T00:02:31.271Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/startrek-simulation/versions {"name":"projects/82903193802/sites/startrek-simulation/versions/fb6fc631c86918b2","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2025-08-03T00:02:31.273Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:31.273Z] Checked if tokens are valid: true, expires at: 1754182945332
+[debug] [2025-08-03T00:02:31.273Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/startrek-simulation/serviceAccounts/firebase-app-hosting-compute@startrek-simulation.iam.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-08-03T00:02:31.273Z] >>> [apiv2][(partial)header] POST https://iam.googleapis.com/v1/projects/startrek-simulation/serviceAccounts/firebase-app-hosting-compute@startrek-simulation.iam.gserviceaccount.com:testIamPermissions x-goog-quota-user=projects/startrek-simulation
+[debug] [2025-08-03T00:02:31.273Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/startrek-simulation/serviceAccounts/firebase-app-hosting-compute@startrek-simulation.iam.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}

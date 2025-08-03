@@ -440,5 +440,55 @@
       }
     ],
     "specialAbilities": []
+  },
+  {
+    "name": "Andorian",
+    "fleets": [
+      {
+        "id": "0",
+        "name": "Regular Fleet",
+        "maxShips": 9,
+        "minShips": 3,
+        "ability": "",
+        "effects": null
+      },
+      {
+        "id": "1",
+        "name": "Reconnaissance Fleet",
+        "maxShips": 3,
+        "minShips": 3,
+        "ability": "When this Fleet occupies or is in a Space Lane adjacent to a Rival-controlled System, you may Exhaust a Command to place an Andorian Token on the System. You may not place more Andorian Tokens than you have Ascendancy. You may remove Tokens at any time.",
+        "effects": null
+      },
+      {
+        "id": "2",
+        "name": "Strike Fleet",
+        "maxShips": 5,
+        "minShips": 3,
+        "ability": "Ships in this Fleet receive +1 to Hit Rolls against Ships or Nodes in Systems marked with an Andorian Token.",
+        "effects": {
+          "andorianTokenBonus": true
+        }
+      },
+      {
+        "id": "3",
+        "name": "Command Fleet",
+        "maxShips": 8,
+        "minShips": 3,
+        "ability": "You may Exhaust a Command to switch the position of this fleet with any other Andorian fleet.",
+        "effects": null
+      }
+    ],
+    "advancements": [
+      {
+        "name": "A.I. Tactical Analysis",
+        "ability": "In Space Battles, your opponent must reroll one hit each round.",
+        "isStartingAdvancement": false,
+        "effects": {
+          "enemyRerollOneHit": true
+        }
+      }
+    ],
+    "specialAbilities": []
   }
 ]
